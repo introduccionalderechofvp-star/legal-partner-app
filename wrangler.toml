@@ -1,0 +1,8 @@
+name = "reparto-herman-felipe"
+compatibility_date = "2026-03-25"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "reparto-herman-felipe"
+database_id = "REEMPLAZAR_POR_DATABASE_ID"

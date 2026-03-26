@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reparto Hernán / Felipe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div id="app-shell" class="app-shell hidden">
+      <aside class="sidebar card">
+        <div>
+          <p class="eyebrow">Sociedad de hecho</p>
+          <h1>Reparto Hernán / Felipe</h1>
+          <p class="muted">Control mensual de topes, arrastres, ingresos especiales, gastos compartidos y saldos pendientes.</p>
+        </div>
+
+        <div class="sidebar-section">
+          <label for="actorSelect">Quién está ingresando</label>
+          <select id="actorSelect"></select>
+        </div>
+
+        <div class="sidebar-section">
+          <button id="newMovementBtn" class="primary-btn full-width">Nuevo movimiento</button>
+          <button id="exportBtn" class="secondary-btn full-width">Descargar Excel</button>
+        </div>
+
+        <div class="sidebar-section small-note">
+          <p><strong>Reglas implementadas</strong></p>
+          <ul>
+            <li>Tope base mensual: <span id="capValue">$8.000.000</span>.</li>
+            <li>El faltante de cada mes se arrastra al siguiente.</li>
+            <li>Los gastos compartidos pagados antes del tope reducen el avance.</li>
+            <li>Los gastos pagados después del tope generan reembolso antes de repartir.</li>
+          </ul>
+        </div>
+
+        <div class="sidebar-section small-note">
+          <button id="lockBtn" class="ghost-btn full-width">Bloquear</button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section class="hero-row">
+          <div class="card hero-card">
+            <div>
+              <p class="eyebrow">Mes seleccionado</p>
+              <h2 id="selectedMonthLabel">—</h2>
+            </div>
+            <div class="month-actions">
+              <label for="monthSelect">Ver mes</label>
+              <select id="monthSelect"></select>
+            </div>
+          </div>
+          <div class="card hero-card">
+            <p class="eyebrow">Saldos pendientes entre socios</p>
+            <div id="globalBalances" class="balance-grid"></div>
+          </div>
+        </section>
+
+        <section id="partnerCards" class="partner-grid"></section>
+
+        <section class="card section-card">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Movimientos</p>
+              <h3>Historial editable</h3>
+            </div>
+            <div class="filter-pill" id="movementCountPill">0 movimientos</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Socio</th>
+                  <th>Concepto</th>
+                  <th>Valor</th>
+                  <th>Efecto calculado</th>
+                  <th>Pago al otro</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="movementsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card section-card">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Pendientes</p>
+              <h3>Obligaciones no pagadas</h3>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Origen</th>
+                  <th>Debe pagar</th>
+                  <th>Debe recibir</th>
+                  <th>Valor</th>
+                  <th>Concepto</th>
+                </tr>
+              </thead>
+              <tbody id="pendingTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="loginOverlay" class="overlay">
+      <div class="modal card narrow">
+        <p class="eyebrow">Acceso</p>
+        <h2>Ingresa el PIN compartido</h2>
+        <p class="muted">Este PIN evita accesos casuales, pero no reemplaza una autenticación formal.</p>
+        <form id="loginForm" class="stack gap-16">
+          <div>
+            <label for="pinInput">PIN</label>
+            <input id="pinInput" name="pin" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="primary-btn" type="submit">Entrar</button>
+          <p id="loginError" class="error-text hidden"></p>
+        </form>
+      </div>
+    </div>
+
+    <div id="movementOverlay" class="overlay hidden">
+      <div class="modal card wide">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Formulario</p>
+            <h2 id="movementModalTitle">Nuevo movimiento</h2>
+          </div>
+          <button id="closeMovementModalBtn" class="icon-btn" type="button">×</button>
+        </div>
+
+        <form id="movementForm" class="stack gap-16">
+          <input type="hidden" id="movementId" />
+          <div class="two-col">
+            <div>
+              <label for="movementDate">Fecha</label>
+              <input id="movementDate" type="date" required />
+            </div>
+            <div>
+              <label for="movementType">Tipo</label>
+              <select id="movementType" required>
+                <option value="normal_income">Ingreso normal</option>
+                <option value="special_income">Ingreso especial</option>
+                <option value="shared_expense">Gasto compartido</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div>
+              <label for="movementPartner">Socio asociado</label>
+              <select id="movementPartner" required></select>
+              <p class="field-help">En ingresos, es quien recibió el dinero. En gastos, es quien lo pagó.</p>
+            </div>
+            <div>
+              <label for="movementAmount">Valor</label>
+              <input id="movementAmount" type="number" min="1" step="1" required />
+            </div>
+          </div>
+
+          <div>
+            <label for="movementConcept">Concepto</label>
+            <input id="movementConcept" type="text" maxlength="200" required />
+          </div>
+
+          <div id="specialIncomeFields" class="two-col hidden">
+            <div>
+              <label for="specialPct">Porcentaje para el otro socio</label>
+              <input id="specialPct" type="number" min="0" max="100" step="0.1" value="50" />
+            </div>
+            <div class="info-box compact">
+              <strong>Regla</strong>
+              <span>El ingreso especial no afecta ningún tope. Solo se reparte según este porcentaje.</span>
+            </div>
+          </div>
+
+          <div id="paidToggleWrap" class="checkbox-row hidden">
+            <label class="checkbox-label">
+              <input id="paidToPartner" type="checkbox" />
+              <span>La parte que le correspondía al otro socio ya fue pagada.</span>
+            </label>
+          </div>
+
+          <div>
+            <label for="movementNotes">Observaciones</label>
+            <textarea id="movementNotes" rows="3" maxlength="1000"></textarea>
+          </div>
+
+          <div id="movementPreview" class="info-box"></div>
+          <p id="movementError" class="error-text hidden"></p>
+
+          <div class="modal-actions">
+            <button type="button" id="deleteMovementBtn" class="danger-btn hidden">Eliminar</button>
+            <div class="actions-right">
+              <button type="button" id="cancelMovementBtn" class="secondary-btn">Cancelar</button>
+              <button type="submit" class="primary-btn">Guardar</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
