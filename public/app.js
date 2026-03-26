@@ -49,6 +49,7 @@
     paidToggleWrap: document.getElementById('paidToggleWrap'),
     paidToPartner: document.getElementById('paidToPartner'),
     movementNotes: document.getElementById('movementNotes'),
+    themeToggleBtn: document.getElementById('themeToggleBtn'),
     movementPreview: document.getElementById('movementPreview'),
     movementError: document.getElementById('movementError'),
     deleteMovementBtn: document.getElementById('deleteMovementBtn'),
@@ -758,6 +759,7 @@
     });
 
     els.lockBtn.addEventListener('click', lockApp);
+    els.themeToggleBtn.addEventListener('click', toggleTheme);
     els.newMovementBtn.addEventListener('click', () => openMovementModal());
     els.cancelMovementBtn.addEventListener('click', closeMovementModal);
     els.closeMovementModalBtn.addEventListener('click', closeMovementModal);
@@ -889,12 +891,31 @@
     XLSX.writeFile(wb, fileName);
   }
 
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('app-theme', next);
+    els.themeToggleBtn.textContent = next === 'dark' ? 'Modo claro' : 'Modo oscuro';
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem('app-theme');
+    const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const theme = saved || preferred;
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      els.themeToggleBtn.textContent = 'Modo claro';
+    }
+  }
+
   async function init() {
     fillActorSelect();
     fillPartnerSelect(els.movementPartner);
     els.movementDate.value = new Date().toISOString().slice(0, 10);
     els.movementPartner.value = state.actor;
     attachEvents();
+    initTheme();
 
     if (state.pin) {
       try {
