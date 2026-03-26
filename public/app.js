@@ -463,7 +463,7 @@
             <div class="metric"><span class="label">Arrastre que sale</span><strong>${formatCOP(stats.carryOut)}</strong></div>
             <div class="metric"><span class="label">Ingresos normales</span><strong>${formatCOP(stats.normalIncome)}</strong></div>
             <div class="metric"><span class="label">Ingresos especiales</span><strong>${formatCOP(stats.specialIncome)}</strong></div>
-            <div class="metric"><span class="label">Causado económico del mes</span><strong>${formatCOP(stats.causedGross)}</strong><small>Total que le quedó al socio en el mes, sin contar pagos directos entre socios.</small></div>
+            <div class="metric"><span class="label">Causado económico del mes</span><strong>${formatCOP(stats.causedGross)}</strong><small>Su parte económica del mes, sin importar si los pagos entre socios están al día.</small></div>
             <div class="metric"><span class="label">Gastos compartidos pagados</span><strong>${formatCOP(stats.expensesPaid)}</strong></div>
             <div class="metric"><span class="label">Recibido por reparto</span><strong>${formatCOP(stats.receivedFromSplit)}</strong></div>
             <div class="metric"><span class="label">Cedido al otro</span><strong>${formatCOP(stats.cededToOther)}</strong></div>
