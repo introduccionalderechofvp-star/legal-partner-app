@@ -1,4 +1,4 @@
-name = "reparto-herman-felipe"
+name = "reparto-hernan-felipe"
 compatibility_date = "2026-03-25"
 pages_build_output_dir = "public"
 
@@ -6,3 +6,6 @@ pages_build_output_dir = "public"
 binding = "DB"
 database_name = "reparto-herman-felipe"
 database_id = "4857fc9c-c7cf-48d3-91c9-9abc701bea46"
+
+[vars]
+APP_PIN = "1234"
