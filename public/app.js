@@ -545,7 +545,7 @@
   function renderPendingTable() {
     const pending = state.computed?.pendingItems || [];
     if (!pending.length) {
-      els.pendingTableBody.innerHTML = '<tr><td colspan="6" class="muted">No hay obligaciones pendientes entre socios.</td></tr>';
+      els.pendingTableBody.innerHTML = '<tr><td colspan="7" class="muted">No hay obligaciones pendientes entre socios.</td></tr>';
       return;
     }
 
@@ -561,6 +561,11 @@
             <td>${escapeHtml(displayPartner(item.to))}</td>
             <td class="mono">${formatCOP(item.amount)}</td>
             <td>${escapeHtml(item.concept)}</td>
+            <td>
+              <div class="movement-actions">
+                <button class="mini-btn" type="button" data-mark-paid-id="${escapeHtml(item.movementId)}">Marcar pagado</button>
+              </div>
+            </td>
           </tr>
         `,
       )
@@ -709,6 +714,14 @@
     els.movementPreview.innerHTML = detailLines.join('');
   }
 
+  async function markAsPaid(movementId) {
+    const movement = state.movements.find((item) => item.id === movementId);
+    if (!movement) return;
+    const { id, ...body } = { ...movement, paid_to_partner: true };
+    await api(`/api/movements/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+    await loadMovements();
+  }
+
   async function loadMovements() {
     const data = await api('/api/movements', { method: 'GET' });
     state.movements = (data.items || []).map(normalizeMovement);
@@ -832,6 +845,22 @@
       const button = event.target.closest('[data-edit-id]');
       if (!button) return;
       openMovementModal(button.getAttribute('data-edit-id'));
+    });
+
+    els.pendingTableBody.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-mark-paid-id]');
+      if (!button) return;
+      const ok = window.confirm('¿Confirmas que este saldo ya fue pagado?');
+      if (!ok) return;
+      button.disabled = true;
+      button.textContent = 'Guardando…';
+      try {
+        await markAsPaid(button.getAttribute('data-mark-paid-id'));
+      } catch (error) {
+        alert(`Error al guardar: ${error.message}`);
+        button.disabled = false;
+        button.textContent = 'Marcar pagado';
+      }
     });
 
     els.exportBtn.addEventListener('click', exportWorkbook);
