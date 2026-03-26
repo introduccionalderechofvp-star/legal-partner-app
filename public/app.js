@@ -188,7 +188,19 @@
         partnerStats[partner].expenseRecoveryStart = expenseRecovery[partner];
       }
 
-      for (const movement of grouped.get(key)) {
+      const typePriority = {
+        shared_expense: 0,
+        normal_income: 1,
+        special_income: 2,
+      };
+
+      const monthMovements = [...grouped.get(key)].sort((a, b) => {
+        const byPriority = typePriority[a.type] - typePriority[b.type];
+        if (byPriority !== 0) return byPriority;
+        return compareMovements(a, b);
+      });
+
+      for (const movement of monthMovements) {
         const owner = movement.partner;
         const other = otherPartner(owner);
         const effect = {
